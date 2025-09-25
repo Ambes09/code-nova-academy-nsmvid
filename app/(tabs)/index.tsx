@@ -253,7 +253,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView style={commonStyles.content} showsVerticalScrollIndicator={false}>
         <View style={{ paddingTop: spacing.md }}>
           {renderWelcomeCard()}
@@ -275,6 +275,6 @@ export default function HomeScreen() {
         isVisible={showFunFact}
         onClose={() => setShowFunFact(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }

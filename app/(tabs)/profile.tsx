@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { commonStyles, colors, spacing, borderRadius } from '../../styles/commonStyles';
 import Icon from '../../components/Icon';
 import ProgressRing from '../../components/ProgressRing';
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Badge {
   id: string;
@@ -70,7 +72,7 @@ const badges: Badge[] = [
   },
 ];
 
-const userStats = {
+const defaultUserStats = {
   name: 'Alex Johnson',
   level: 2,
   xp: 250,
@@ -85,6 +87,31 @@ const userStats = {
 
 export default function ProfileScreen() {
   const [selectedTab, setSelectedTab] = useState('badges');
+  const [userStats, setUserStats] = useState(defaultUserStats);
+  const [userAvatar, setUserAvatar] = useState(null);
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const name = await AsyncStorage.getItem('userName');
+      const avatar = await AsyncStorage.getItem('userAvatar');
+      
+      if (name) {
+        setUserName(name);
+        setUserStats(prev => ({ ...prev, name }));
+      }
+      
+      if (avatar) {
+        setUserAvatar(JSON.parse(avatar));
+      }
+    } catch (error) {
+      console.log('Error loading user data:', error);
+    }
+  };
 
   const renderProfileHeader = () => (
     <LinearGradient
@@ -97,37 +124,125 @@ export default function ProfileScreen() {
     >
       <View style={commonStyles.rowBetween}>
         <View style={{ flex: 1 }}>
+          {/* Avatar */}
           <View style={{
             backgroundColor: colors.background,
             borderRadius: borderRadius.full,
-            width: 60,
-            height: 60,
+            width: 80,
+            height: 80,
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: spacing.md,
+            borderWidth: 3,
+            borderColor: 'rgba(255, 255, 255, 0.3)',
           }}>
-            <Text style={[commonStyles.heading, { color: colors.primary, marginBottom: 0 }]}>
-              {userStats.name.split(' ').map(n => n[0]).join('')}
-            </Text>
+            {userAvatar?.type === 'emoji' ? (
+              <Text style={{ fontSize: 32 }}>
+                {userAvatar.value}
+              </Text>
+            ) : userAvatar?.type === 'custom' ? (
+              <Image
+                source={{ uri: userAvatar.value }}
+                style={{
+                  width: 70,
+                  height: 70,
+                  borderRadius: 35,
+                }}
+              />
+            ) : (
+              <Text style={[commonStyles.heading, { color: colors.primary, marginBottom: 0, fontSize: 24 }]}>
+                {userStats.name.split(' ').map(n => n[0]).join('')}
+              </Text>
+            )}
           </View>
+          
           <Text style={[commonStyles.heading, { color: colors.background, marginBottom: spacing.xs }]}>
             {userStats.name}
           </Text>
+          
+          <View style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.xs,
+            borderRadius: borderRadius.full,
+            alignSelf: 'flex-start',
+            marginBottom: spacing.sm,
+          }}>
+            <Text style={[commonStyles.caption, { color: colors.background, fontWeight: '600' }]}>
+              Level {userStats.level}
+            </Text>
+          </View>
+          
           <Text style={[commonStyles.body, { color: colors.background, opacity: 0.9 }]}>
-            Level {userStats.level} • Joined {userStats.joinDate}
+            Joined {userStats.joinDate}
           </Text>
         </View>
+        
         <View style={{ alignItems: 'center' }}>
           <ProgressRing 
             progress={(userStats.xp / userStats.xpToNextLevel) * 100} 
-            size={60} 
-            strokeWidth={6} 
+            size={70} 
+            strokeWidth={8} 
             color={colors.background} 
           />
-          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.sm, fontWeight: '600' }]}>
             {userStats.xp}/{userStats.xpToNextLevel} XP
           </Text>
+          <Text style={[commonStyles.caption, { color: colors.background, opacity: 0.8 }]}>
+            to Level {userStats.level + 1}
+          </Text>
         </View>
+      </View>
+
+      {/* Quick Actions */}
+      <View style={{
+        flexDirection: 'row',
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255, 255, 255, 0.2)',
+      }}>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            paddingVertical: spacing.sm,
+          }}
+          onPress={() => router.push('/profile/settings')}
+        >
+          <Icon name="settings" size={20} color={colors.background} />
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+            Settings
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            paddingVertical: spacing.sm,
+          }}
+          onPress={() => console.log('View achievements')}
+        >
+          <Icon name="trophy" size={20} color={colors.background} />
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+            Achievements
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            paddingVertical: spacing.sm,
+          }}
+          onPress={() => console.log('Share progress')}
+        >
+          <Icon name="share" size={20} color={colors.background} />
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+            Share
+          </Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
@@ -137,29 +252,131 @@ export default function ProfileScreen() {
       <Text style={[commonStyles.subheading, { marginBottom: spacing.md }]}>Learning Stats</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         <View style={{ width: '50%', paddingRight: spacing.sm, marginBottom: spacing.md }}>
-          <Text style={[commonStyles.title, { fontSize: 20, marginBottom: 0 }]}>
-            {userStats.totalLearningTime}
-          </Text>
-          <Text style={commonStyles.caption}>Total Learning Time</Text>
+          <View style={{
+            backgroundColor: colors.primary,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            alignItems: 'center',
+          }}>
+            <Icon name="time" size={20} color={colors.background} />
+            <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 0, color: colors.background, marginTop: spacing.xs }]}>
+              {userStats.totalLearningTime}
+            </Text>
+            <Text style={[commonStyles.caption, { color: colors.background, opacity: 0.9 }]}>
+              Learning Time
+            </Text>
+          </View>
         </View>
         <View style={{ width: '50%', paddingLeft: spacing.sm, marginBottom: spacing.md }}>
-          <Text style={[commonStyles.title, { fontSize: 20, marginBottom: 0 }]}>
-            {userStats.coursesCompleted}
-          </Text>
-          <Text style={commonStyles.caption}>Courses Completed</Text>
+          <View style={{
+            backgroundColor: colors.success,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            alignItems: 'center',
+          }}>
+            <Icon name="school" size={20} color={colors.background} />
+            <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 0, color: colors.background, marginTop: spacing.xs }]}>
+              {userStats.coursesCompleted}
+            </Text>
+            <Text style={[commonStyles.caption, { color: colors.background, opacity: 0.9 }]}>
+              Courses Done
+            </Text>
+          </View>
         </View>
         <View style={{ width: '50%', paddingRight: spacing.sm }}>
-          <Text style={[commonStyles.title, { fontSize: 20, marginBottom: 0 }]}>
-            {userStats.currentStreak}
-          </Text>
-          <Text style={commonStyles.caption}>Current Streak</Text>
+          <View style={{
+            backgroundColor: colors.warning,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            alignItems: 'center',
+          }}>
+            <Icon name="flame" size={20} color={colors.background} />
+            <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 0, color: colors.background, marginTop: spacing.xs }]}>
+              {userStats.currentStreak}
+            </Text>
+            <Text style={[commonStyles.caption, { color: colors.background, opacity: 0.9 }]}>
+              Day Streak
+            </Text>
+          </View>
         </View>
         <View style={{ width: '50%', paddingLeft: spacing.sm }}>
-          <Text style={[commonStyles.title, { fontSize: 20, marginBottom: 0 }]}>
-            {userStats.exercisesCompleted}
-          </Text>
-          <Text style={commonStyles.caption}>Exercises Done</Text>
+          <View style={{
+            backgroundColor: colors.secondary,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            alignItems: 'center',
+          }}>
+            <Icon name="trophy" size={20} color={colors.background} />
+            <Text style={[commonStyles.title, { fontSize: 18, marginBottom: 0, color: colors.background, marginTop: spacing.xs }]}>
+              {badges.filter(b => b.isEarned).length}
+            </Text>
+            <Text style={[commonStyles.caption, { color: colors.background, opacity: 0.9 }]}>
+              Badges Earned
+            </Text>
+          </View>
         </View>
+      </View>
+    </View>
+  );
+
+  const renderCurrentProgress = () => (
+    <View style={[commonStyles.card, { marginBottom: spacing.md }]}>
+      <View style={[commonStyles.rowBetween, { marginBottom: spacing.md }]}>
+        <Text style={commonStyles.subheading}>Current Progress</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/learn')}>
+          <Text style={[commonStyles.caption, { color: colors.primary }]}>View All</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <View style={{
+        backgroundColor: colors.backgroundAlt,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+      }}>
+        <View style={[commonStyles.rowBetween, { marginBottom: spacing.sm }]}>
+          <Text style={[commonStyles.body, { fontWeight: '600' }]}>
+            Basic Programming Concepts
+          </Text>
+          <Text style={[commonStyles.caption, { color: colors.primary }]}>
+            25% Complete
+          </Text>
+        </View>
+        
+        <View style={{
+          height: 6,
+          backgroundColor: colors.grey,
+          borderRadius: 3,
+          marginBottom: spacing.md,
+        }}>
+          <View style={{
+            height: 6,
+            backgroundColor: colors.primary,
+            borderRadius: 3,
+            width: '25%',
+          }} />
+        </View>
+        
+        <View style={[commonStyles.row, { marginBottom: spacing.md }]}>
+          <Icon name="book" size={16} color={colors.textSecondary} />
+          <Text style={[commonStyles.caption, { marginLeft: spacing.xs, color: colors.textSecondary }]}>
+            Chapter 3 of 12 • What is Programming?
+          </Text>
+        </View>
+        
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.primary,
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.md,
+            borderRadius: borderRadius.md,
+            alignItems: 'center',
+          }}
+          onPress={() => router.push('/course/1')}
+        >
+          <Text style={[commonStyles.buttonText, { color: colors.background }]}>
+            Continue Learning
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -277,11 +494,12 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={commonStyles.safeArea}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView style={commonStyles.content} showsVerticalScrollIndicator={false}>
         <View style={{ paddingTop: spacing.md }}>
           {renderProfileHeader()}
           {renderStatsGrid()}
+          {renderCurrentProgress()}
           {renderTabButtons()}
           
           {selectedTab === 'badges' ? (
@@ -303,6 +521,6 @@ export default function ProfileScreen() {
           <View style={{ height: spacing.xl }} />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
