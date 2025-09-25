@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { commonStyles, colors, spacing, borderRadius } from '../../styles/commonStyles';
 import Icon from '../../components/Icon';
 
@@ -16,6 +17,7 @@ interface Exercise {
   language: string;
   isCompleted: boolean;
   isLocked: boolean;
+  xpReward: number;
 }
 
 const exercises: Exercise[] = [
@@ -26,9 +28,10 @@ const exercises: Exercise[] = [
     type: 'drag-drop',
     difficulty: 'Easy',
     estimatedTime: '5 min',
-    language: 'Multiple',
+    language: 'Java',
     isCompleted: true,
     isLocked: false,
+    xpReward: 25,
   },
   {
     id: '2',
@@ -40,6 +43,7 @@ const exercises: Exercise[] = [
     language: 'Java',
     isCompleted: false,
     isLocked: false,
+    xpReward: 35,
   },
   {
     id: '3',
@@ -51,6 +55,7 @@ const exercises: Exercise[] = [
     language: 'Python',
     isCompleted: false,
     isLocked: true,
+    xpReward: 75,
   },
   {
     id: '4',
@@ -62,20 +67,65 @@ const exercises: Exercise[] = [
     language: 'C++',
     isCompleted: false,
     isLocked: true,
+    xpReward: 50,
+  },
+  {
+    id: '5',
+    title: 'Array Manipulation',
+    description: 'Practice working with arrays and lists',
+    type: 'drag-drop',
+    difficulty: 'Medium',
+    estimatedTime: '12 min',
+    language: 'Python',
+    isCompleted: false,
+    isLocked: true,
+    xpReward: 40,
+  },
+  {
+    id: '6',
+    title: 'Function Creation',
+    description: 'Create and use functions to solve problems',
+    type: 'project',
+    difficulty: 'Hard',
+    estimatedTime: '30 min',
+    language: 'Java',
+    isCompleted: false,
+    isLocked: true,
+    xpReward: 100,
   },
 ];
 
 const practiceStats = {
   exercisesCompleted: 1,
-  totalExercises: 4,
+  totalExercises: exercises.length,
   streakDays: 3,
   totalTime: '5 min',
+  totalXP: 25,
+  weeklyGoal: 5,
+  weeklyProgress: 1,
 };
 
 export default function PracticeScreen() {
   const [selectedFilter, setSelectedFilter] = useState('All');
   
-  const filters = ['All', 'Easy', 'Medium', 'Hard', 'Completed'];
+  const filters = ['All', 'Easy', 'Medium', 'Hard', 'Completed', 'Available'];
+
+  const getFilteredExercises = () => {
+    switch (selectedFilter) {
+      case 'Easy':
+        return exercises.filter(ex => ex.difficulty === 'Easy');
+      case 'Medium':
+        return exercises.filter(ex => ex.difficulty === 'Medium');
+      case 'Hard':
+        return exercises.filter(ex => ex.difficulty === 'Hard');
+      case 'Completed':
+        return exercises.filter(ex => ex.isCompleted);
+      case 'Available':
+        return exercises.filter(ex => !ex.isLocked && !ex.isCompleted);
+      default:
+        return exercises;
+    }
+  };
 
   const getExerciseTypeIcon = (type: string) => {
     switch (type) {
@@ -118,8 +168,8 @@ export default function PracticeScreen() {
       <Text style={[commonStyles.heading, { color: colors.background, marginBottom: spacing.md }]}>
         Practice Stats
       </Text>
-      <View style={commonStyles.rowBetween}>
-        <View style={{ alignItems: 'center', flex: 1 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <View style={{ width: '50%', alignItems: 'center', marginBottom: spacing.md }}>
           <Text style={[commonStyles.title, { color: colors.background, fontSize: 24, marginBottom: 0 }]}>
             {practiceStats.exercisesCompleted}
           </Text>
@@ -127,7 +177,7 @@ export default function PracticeScreen() {
             Exercises Done
           </Text>
         </View>
-        <View style={{ alignItems: 'center', flex: 1 }}>
+        <View style={{ width: '50%', alignItems: 'center', marginBottom: spacing.md }}>
           <Text style={[commonStyles.title, { color: colors.background, fontSize: 24, marginBottom: 0 }]}>
             {practiceStats.streakDays}
           </Text>
@@ -135,16 +185,53 @@ export default function PracticeScreen() {
             Day Streak
           </Text>
         </View>
-        <View style={{ alignItems: 'center', flex: 1 }}>
+        <View style={{ width: '50%', alignItems: 'center' }}>
           <Text style={[commonStyles.title, { color: colors.background, fontSize: 24, marginBottom: 0 }]}>
-            {practiceStats.totalTime}
+            {practiceStats.totalXP}
           </Text>
           <Text style={[commonStyles.caption, { color: colors.background }]}>
-            Total Time
+            Total XP
+          </Text>
+        </View>
+        <View style={{ width: '50%', alignItems: 'center' }}>
+          <Text style={[commonStyles.title, { color: colors.background, fontSize: 24, marginBottom: 0 }]}>
+            {practiceStats.weeklyProgress}/{practiceStats.weeklyGoal}
+          </Text>
+          <Text style={[commonStyles.caption, { color: colors.background }]}>
+            Weekly Goal
           </Text>
         </View>
       </View>
     </LinearGradient>
+  );
+
+  const renderWeeklyGoal = () => (
+    <View style={[commonStyles.card, { marginBottom: spacing.md }]}>
+      <View style={[commonStyles.rowBetween, { marginBottom: spacing.md }]}>
+        <Text style={commonStyles.subheading}>Weekly Goal</Text>
+        <Text style={[commonStyles.caption, { color: colors.primary }]}>
+          {practiceStats.weeklyProgress}/{practiceStats.weeklyGoal} exercises
+        </Text>
+      </View>
+      
+      <View style={{
+        backgroundColor: colors.backgroundAlt,
+        height: 8,
+        borderRadius: 4,
+        marginBottom: spacing.sm,
+      }}>
+        <View style={{
+          backgroundColor: colors.primary,
+          height: 8,
+          borderRadius: 4,
+          width: `${(practiceStats.weeklyProgress / practiceStats.weeklyGoal) * 100}%`,
+        }} />
+      </View>
+      
+      <Text style={commonStyles.bodySecondary}>
+        Complete {practiceStats.weeklyGoal - practiceStats.weeklyProgress} more exercises to reach your weekly goal!
+      </Text>
+    </View>
   );
 
   const renderFilterButtons = () => (
@@ -193,7 +280,7 @@ export default function PracticeScreen() {
       ]}
       onPress={() => {
         if (!exercise.isLocked) {
-          console.log('Start exercise:', exercise.title);
+          router.push(`/exercise/${exercise.id}`);
         }
       }}
       disabled={exercise.isLocked}
@@ -231,22 +318,31 @@ export default function PracticeScreen() {
             {exercise.description}
           </Text>
           
-          <View style={commonStyles.row}>
-            <View style={{
-              backgroundColor: colors.backgroundAlt,
-              paddingHorizontal: spacing.sm,
-              paddingVertical: spacing.xs,
-              borderRadius: borderRadius.sm,
-              marginRight: spacing.sm,
-            }}>
-              <Text style={[commonStyles.caption, { color: colors.text }]}>
-                {exercise.language}
-              </Text>
-            </View>
+          <View style={[commonStyles.rowBetween, { alignItems: 'flex-end' }]}>
             <View style={commonStyles.row}>
-              <Icon name="time" size={12} color={colors.textLight} />
-              <Text style={[commonStyles.caption, { marginLeft: spacing.xs }]}>
-                {exercise.estimatedTime}
+              <View style={{
+                backgroundColor: colors.backgroundAlt,
+                paddingHorizontal: spacing.sm,
+                paddingVertical: spacing.xs,
+                borderRadius: borderRadius.sm,
+                marginRight: spacing.sm,
+              }}>
+                <Text style={[commonStyles.caption, { color: colors.text }]}>
+                  {exercise.language}
+                </Text>
+              </View>
+              <View style={commonStyles.row}>
+                <Icon name="time" size={12} color={colors.textLight} />
+                <Text style={[commonStyles.caption, { marginLeft: spacing.xs }]}>
+                  {exercise.estimatedTime}
+                </Text>
+              </View>
+            </View>
+            
+            <View style={[commonStyles.row, { alignItems: 'center' }]}>
+              <Icon name="star" size={12} color={colors.warning} />
+              <Text style={[commonStyles.caption, { marginLeft: spacing.xs, color: colors.warning }]}>
+                +{exercise.xpReward} XP
               </Text>
             </View>
           </View>
@@ -285,12 +381,15 @@ export default function PracticeScreen() {
     </TouchableOpacity>
   );
 
+  const filteredExercises = getFilteredExercises();
+
   return (
     <SafeAreaView style={commonStyles.safeArea}>
       <View style={commonStyles.content}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={{ paddingTop: spacing.md }}>
             {renderStatsCard()}
+            {renderWeeklyGoal()}
             
             <Text style={[commonStyles.heading, { marginBottom: spacing.md }]}>
               Practice Exercises
@@ -298,7 +397,19 @@ export default function PracticeScreen() {
             
             {renderFilterButtons()}
             
-            {exercises.map(renderExercise)}
+            {filteredExercises.length === 0 ? (
+              <View style={[commonStyles.card, { alignItems: 'center', padding: spacing.xl }]}>
+                <Icon name="search" size={48} color={colors.textLight} />
+                <Text style={[commonStyles.subheading, { marginTop: spacing.md, marginBottom: spacing.sm }]}>
+                  No exercises found
+                </Text>
+                <Text style={[commonStyles.bodySecondary, { textAlign: 'center' }]}>
+                  Try adjusting your filter or check back later for new exercises.
+                </Text>
+              </View>
+            ) : (
+              filteredExercises.map(renderExercise)
+            )}
             
             <View style={{ height: spacing.xl }} />
           </View>

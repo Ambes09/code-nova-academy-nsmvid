@@ -15,6 +15,8 @@ interface Chapter {
   duration: string;
   isCompleted: boolean;
   isLocked: boolean;
+  hasQuiz: boolean;
+  hasExercise: boolean;
 }
 
 const courseData = {
@@ -26,6 +28,14 @@ const courseData = {
     chapters: 12,
     progress: 25,
     difficulty: 'Beginner',
+    instructor: 'Nova Code Academy',
+    learningObjectives: [
+      'Understand what programming is and how it works',
+      'Learn about variables and different data types',
+      'Master basic operations and expressions',
+      'Use conditional statements to make decisions',
+      'Implement loops for repetitive tasks'
+    ],
     chapters: [
       {
         id: '1',
@@ -34,6 +44,8 @@ const courseData = {
         duration: '15 min',
         isCompleted: true,
         isLocked: false,
+        hasQuiz: true,
+        hasExercise: false,
       },
       {
         id: '2',
@@ -42,6 +54,8 @@ const courseData = {
         duration: '20 min',
         isCompleted: true,
         isLocked: false,
+        hasQuiz: true,
+        hasExercise: true,
       },
       {
         id: '3',
@@ -50,6 +64,8 @@ const courseData = {
         duration: '18 min',
         isCompleted: true,
         isLocked: false,
+        hasQuiz: true,
+        hasExercise: false,
       },
       {
         id: '4',
@@ -58,6 +74,8 @@ const courseData = {
         duration: '25 min',
         isCompleted: false,
         isLocked: false,
+        hasQuiz: true,
+        hasExercise: true,
       },
       {
         id: '5',
@@ -66,6 +84,57 @@ const courseData = {
         duration: '30 min',
         isCompleted: false,
         isLocked: true,
+        hasQuiz: true,
+        hasExercise: true,
+      },
+      {
+        id: '6',
+        title: 'Functions and Methods',
+        description: 'Organizing code into reusable functions',
+        duration: '35 min',
+        isCompleted: false,
+        isLocked: true,
+        hasQuiz: true,
+        hasExercise: true,
+      },
+    ] as Chapter[],
+  },
+  '2': {
+    name: 'Algorithm Thinking',
+    description: 'Develop logical thinking and problem-solving skills',
+    duration: '15 hours',
+    modules: 5,
+    chapters: 15,
+    progress: 0,
+    difficulty: 'Beginner',
+    instructor: 'Nova Code Academy',
+    learningObjectives: [
+      'Understand algorithmic thinking',
+      'Learn problem decomposition',
+      'Master flowchart creation',
+      'Practice pseudocode writing',
+      'Solve complex problems step by step'
+    ],
+    chapters: [
+      {
+        id: '1',
+        title: 'What is an Algorithm?',
+        description: 'Understanding algorithms and their importance',
+        duration: '20 min',
+        isCompleted: false,
+        isLocked: false,
+        hasQuiz: true,
+        hasExercise: false,
+      },
+      {
+        id: '2',
+        title: 'Problem Decomposition',
+        description: 'Breaking down complex problems into smaller parts',
+        duration: '25 min',
+        isCompleted: false,
+        isLocked: true,
+        hasQuiz: true,
+        hasExercise: true,
       },
     ] as Chapter[],
   },
@@ -153,6 +222,47 @@ export default function CourseDetailScreen() {
     </View>
   );
 
+  const renderCourseInfo = () => (
+    <View style={[commonStyles.card, { marginBottom: spacing.md }]}>
+      <Text style={[commonStyles.subheading, { marginBottom: spacing.md }]}>
+        Course Information
+      </Text>
+      
+      <View style={[commonStyles.row, { marginBottom: spacing.sm }]}>
+        <Icon name="person" size={16} color={colors.textLight} />
+        <Text style={[commonStyles.body, { marginLeft: spacing.sm }]}>
+          Instructor: {course.instructor}
+        </Text>
+      </View>
+      
+      <View style={[commonStyles.row, { marginBottom: spacing.sm }]}>
+        <Icon name="bar-chart" size={16} color={colors.textLight} />
+        <Text style={[commonStyles.body, { marginLeft: spacing.sm }]}>
+          Difficulty: {course.difficulty}
+        </Text>
+      </View>
+      
+      <View style={[commonStyles.row, { marginBottom: spacing.md }]}>
+        <Icon name="library" size={16} color={colors.textLight} />
+        <Text style={[commonStyles.body, { marginLeft: spacing.sm }]}>
+          {course.modules} modules • {course.chapters.length} chapters
+        </Text>
+      </View>
+
+      <Text style={[commonStyles.subheading, { marginBottom: spacing.sm }]}>
+        Learning Objectives:
+      </Text>
+      {course.learningObjectives.map((objective, index) => (
+        <View key={index} style={[commonStyles.row, { marginBottom: spacing.xs }]}>
+          <Icon name="checkmark-circle" size={14} color={colors.success} />
+          <Text style={[commonStyles.bodySecondary, { marginLeft: spacing.sm, flex: 1 }]}>
+            {objective}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+
   const renderChapter = (chapter: Chapter, index: number) => (
     <TouchableOpacity
       key={chapter.id}
@@ -168,7 +278,7 @@ export default function CourseDetailScreen() {
       ]}
       onPress={() => {
         if (!chapter.isLocked) {
-          console.log('Start chapter:', chapter.title);
+          router.push(`/chapter/${chapter.id}`);
         }
       }}
       disabled={chapter.isLocked}
@@ -205,9 +315,39 @@ export default function CourseDetailScreen() {
             </View>
           </View>
           
-          <Text style={commonStyles.bodySecondary}>
+          <Text style={[commonStyles.bodySecondary, { marginBottom: spacing.sm }]}>
             {chapter.description}
           </Text>
+
+          {/* Chapter features */}
+          <View style={commonStyles.row}>
+            {chapter.hasQuiz && (
+              <View style={{
+                backgroundColor: colors.primary,
+                paddingHorizontal: spacing.xs,
+                paddingVertical: 2,
+                borderRadius: borderRadius.sm,
+                marginRight: spacing.xs,
+              }}>
+                <Text style={[commonStyles.caption, { color: colors.background, fontSize: 10 }]}>
+                  QUIZ
+                </Text>
+              </View>
+            )}
+            {chapter.hasExercise && (
+              <View style={{
+                backgroundColor: colors.success,
+                paddingHorizontal: spacing.xs,
+                paddingVertical: 2,
+                borderRadius: borderRadius.sm,
+                marginRight: spacing.xs,
+              }}>
+                <Text style={[commonStyles.caption, { color: colors.background, fontSize: 10 }]}>
+                  EXERCISE
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
         
         <View style={{ alignItems: 'center' }}>
@@ -248,6 +388,7 @@ export default function CourseDetailScreen() {
       <ScrollView style={commonStyles.content} showsVerticalScrollIndicator={false}>
         <View style={{ paddingTop: spacing.md }}>
           {renderHeader()}
+          {renderCourseInfo()}
           
           <Text style={[commonStyles.heading, { marginBottom: spacing.md }]}>
             Chapters

@@ -7,67 +7,53 @@ import { router } from 'expo-router';
 import { commonStyles, colors, spacing, borderRadius } from '../../styles/commonStyles';
 import Icon from '../../components/Icon';
 import ProgressRing from '../../components/ProgressRing';
-
-interface Course {
-  id: string;
-  name: string;
-  description: string;
-  duration: string;
-  modules: number;
-  chapters: number;
-  progress: number;
-  isLocked: boolean;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-}
-
-const programmingFundamentalsCourses: Course[] = [
-  {
-    id: '1',
-    name: 'Basic Programming Concepts',
-    description: 'Learn variables, data types, and basic programming structures',
-    duration: '12 hours',
-    modules: 4,
-    chapters: 12,
-    progress: 25,
-    isLocked: false,
-    difficulty: 'Beginner',
-  },
-  {
-    id: '2',
-    name: 'Algorithm Thinking',
-    description: 'Develop logical thinking and problem-solving skills',
-    duration: '15 hours',
-    modules: 5,
-    chapters: 15,
-    progress: 0,
-    isLocked: true,
-    difficulty: 'Beginner',
-  },
-  {
-    id: '3',
-    name: 'Problem Solving',
-    description: 'Apply programming concepts to solve real-world problems',
-    duration: '10 hours',
-    modules: 4,
-    chapters: 10,
-    progress: 0,
-    isLocked: true,
-    difficulty: 'Beginner',
-  },
-];
-
-const otherTracks = [
-  { name: 'Web Development', courses: 3, icon: 'globe', color: colors.secondary },
-  { name: 'Programming Languages', courses: 3, icon: 'code-slash', color: colors.success },
-  { name: 'Developer Tools', courses: 3, icon: 'construct', color: colors.warning },
-];
+import { learningTracks, LearningTrack, Course } from '../../data/courseContent';
 
 export default function LearnScreen() {
-  const [selectedTrack, setSelectedTrack] = useState('Programming Fundamentals');
+  const [selectedTrack, setSelectedTrack] = useState(learningTracks[0]);
+
+  const renderTrackSelector = () => (
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      style={{ marginBottom: spacing.md }}
+      contentContainerStyle={{ paddingHorizontal: spacing.md }}
+    >
+      {learningTracks.map((track) => (
+        <TouchableOpacity
+          key={track.id}
+          style={{
+            backgroundColor: selectedTrack.id === track.id ? colors.primary : colors.backgroundAlt,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.sm,
+            borderRadius: borderRadius.full,
+            marginRight: spacing.sm,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+          onPress={() => setSelectedTrack(track)}
+        >
+          <Icon 
+            name={track.icon as any} 
+            size={16} 
+            color={selectedTrack.id === track.id ? colors.background : colors.text} 
+          />
+          <Text style={{
+            color: selectedTrack.id === track.id ? colors.background : colors.text,
+            fontSize: 14,
+            fontFamily: 'Inter_600SemiBold',
+            marginLeft: spacing.xs,
+          }}>
+            {track.name}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
 
   const renderTrackHeader = () => (
     <LinearGradient
-      colors={colors.gradient}
+      colors={[selectedTrack.color, colors.primary]}
       style={{
         borderRadius: borderRadius.md,
         padding: spacing.lg,
@@ -77,30 +63,30 @@ export default function LearnScreen() {
       <View style={commonStyles.rowBetween}>
         <View style={{ flex: 1 }}>
           <Text style={[commonStyles.heading, { color: colors.background, marginBottom: spacing.xs }]}>
-            Programming Fundamentals
+            {selectedTrack.name}
           </Text>
           <Text style={[commonStyles.body, { color: colors.background, opacity: 0.9, marginBottom: spacing.md }]}>
-            Master the basics of programming logic and thinking
+            {selectedTrack.description}
           </Text>
           <View style={commonStyles.row}>
             <View style={[commonStyles.row, { marginRight: spacing.lg }]}>
-              <Icon name="time" size={16} color={colors.background} />
+              <Icon name="book" size={16} color={colors.background} />
               <Text style={[commonStyles.caption, { color: colors.background, marginLeft: spacing.xs }]}>
-                37 hours total
+                {selectedTrack.totalCourses} courses
               </Text>
             </View>
             <View style={commonStyles.row}>
-              <Icon name="book" size={16} color={colors.background} />
+              <Icon name="checkmark-circle" size={16} color={colors.background} />
               <Text style={[commonStyles.caption, { color: colors.background, marginLeft: spacing.xs }]}>
-                3 courses
+                {selectedTrack.completedCourses} completed
               </Text>
             </View>
           </View>
         </View>
         <View style={{ alignItems: 'center' }}>
-          <ProgressRing progress={8} size={60} strokeWidth={6} color={colors.background} />
+          <ProgressRing progress={selectedTrack.progress} size={60} strokeWidth={6} color={colors.background} />
           <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
-            8% Complete
+            {selectedTrack.progress}% Complete
           </Text>
         </View>
       </View>
@@ -153,9 +139,42 @@ export default function LearnScreen() {
               {course.duration} • {course.modules} modules • {course.chapters} chapters
             </Text>
           </View>
+
+          {/* Prerequisites */}
+          {course.prerequisites.length > 0 && (
+            <View style={[commonStyles.row, { marginBottom: spacing.sm }]}>
+              <Icon name="link" size={12} color={colors.textLight} />
+              <Text style={[commonStyles.caption, { marginLeft: spacing.xs }]}>
+                Requires: {course.prerequisites.join(', ')}
+              </Text>
+            </View>
+          )}
+
+          {/* Skills */}
+          <View style={[commonStyles.row, { flexWrap: 'wrap' }]}>
+            {course.skills.slice(0, 3).map((skill, index) => (
+              <View key={index} style={{
+                backgroundColor: selectedTrack.color,
+                paddingHorizontal: spacing.xs,
+                paddingVertical: 2,
+                borderRadius: borderRadius.sm,
+                marginRight: spacing.xs,
+                marginBottom: spacing.xs,
+              }}>
+                <Text style={[commonStyles.caption, { color: colors.background, fontSize: 10 }]}>
+                  {skill}
+                </Text>
+              </View>
+            ))}
+            {course.skills.length > 3 && (
+              <Text style={[commonStyles.caption, { color: colors.textLight }]}>
+                +{course.skills.length - 3} more
+              </Text>
+            )}
+          </View>
           
           {course.progress > 0 && (
-            <View style={commonStyles.row}>
+            <View style={[commonStyles.row, { marginTop: spacing.sm }]}>
               <View style={{
                 backgroundColor: colors.backgroundAlt,
                 height: 4,
@@ -164,7 +183,7 @@ export default function LearnScreen() {
                 marginRight: spacing.sm,
               }}>
                 <View style={{
-                  backgroundColor: colors.primary,
+                  backgroundColor: selectedTrack.color,
                   height: 4,
                   borderRadius: 2,
                   width: `${course.progress}%`,
@@ -181,14 +200,14 @@ export default function LearnScreen() {
               progress={course.progress} 
               size={50} 
               strokeWidth={4} 
-              color={colors.primary} 
+              color={selectedTrack.color} 
             />
           ) : (
             <View style={{
               width: 50,
               height: 50,
               borderRadius: 25,
-              backgroundColor: course.isLocked ? colors.backgroundAlt : colors.primary,
+              backgroundColor: course.isLocked ? colors.backgroundAlt : selectedTrack.color,
               alignItems: 'center',
               justifyContent: 'center',
             }}>
@@ -204,50 +223,64 @@ export default function LearnScreen() {
     </TouchableOpacity>
   );
 
-  const renderOtherTrack = (track: any) => (
-    <TouchableOpacity
-      key={track.name}
-      style={[commonStyles.card, { marginBottom: spacing.md }]}
-      onPress={() => console.log('Navigate to track:', track.name)}
-    >
-      <View style={commonStyles.row}>
-        <View style={{
-          backgroundColor: track.color,
-          borderRadius: borderRadius.sm,
-          width: 40,
-          height: 40,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginRight: spacing.md,
-        }}>
-          <Icon name={track.icon} size={20} color={colors.background} />
+  const renderLearningPath = () => (
+    <View style={[commonStyles.card, { marginBottom: spacing.md }]}>
+      <Text style={[commonStyles.subheading, { marginBottom: spacing.md }]}>
+        Recommended Learning Path
+      </Text>
+      
+      <Text style={[commonStyles.bodySecondary, { marginBottom: spacing.md }]}>
+        Follow this path to master {selectedTrack.name.toLowerCase()}:
+      </Text>
+
+      {selectedTrack.courses.map((course, index) => (
+        <View key={course.id} style={[commonStyles.row, { marginBottom: spacing.sm }]}>
+          <View style={{
+            backgroundColor: course.progress > 0 ? colors.success : 
+                           course.isLocked ? colors.backgroundAlt : selectedTrack.color,
+            borderRadius: borderRadius.full,
+            width: 24,
+            height: 24,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: spacing.sm,
+          }}>
+            <Text style={{
+              color: colors.background,
+              fontSize: 12,
+              fontFamily: 'Inter_600SemiBold',
+            }}>
+              {course.progress > 0 ? '✓' : course.isLocked ? '🔒' : index + 1}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[commonStyles.body, { 
+              color: course.isLocked ? colors.textLight : colors.text 
+            }]}>
+              {course.name}
+            </Text>
+            <Text style={[commonStyles.caption, { color: colors.textLight }]}>
+              {course.duration} • {course.difficulty}
+            </Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={commonStyles.subheading}>{track.name}</Text>
-          <Text style={commonStyles.caption}>{track.courses} courses available</Text>
-        </View>
-        <Icon name="chevron-forward" size={20} color={colors.textLight} />
-      </View>
-    </TouchableOpacity>
+      ))}
+    </View>
   );
 
   return (
     <SafeAreaView style={commonStyles.safeArea}>
       <ScrollView style={commonStyles.content} showsVerticalScrollIndicator={false}>
         <View style={{ paddingTop: spacing.md }}>
+          {renderTrackSelector()}
           {renderTrackHeader()}
+          {renderLearningPath()}
           
           <Text style={[commonStyles.heading, { marginBottom: spacing.md }]}>
-            Courses
+            Courses in {selectedTrack.name}
           </Text>
           
-          {programmingFundamentalsCourses.map(renderCourse)}
-          
-          <Text style={[commonStyles.heading, { marginTop: spacing.lg, marginBottom: spacing.md }]}>
-            Other Learning Tracks
-          </Text>
-          
-          {otherTracks.map(renderOtherTrack)}
+          {selectedTrack.courses.map(renderCourse)}
           
           <View style={{ height: spacing.xl }} />
         </View>

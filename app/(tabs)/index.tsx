@@ -1,69 +1,32 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { commonStyles, colors, spacing, borderRadius } from '../../styles/commonStyles';
 import Icon from '../../components/Icon';
 import ProgressRing from '../../components/ProgressRing';
-
-interface LearningTrack {
-  id: string;
-  name: string;
-  description: string;
-  progress: number;
-  totalCourses: number;
-  completedCourses: number;
-  icon: string;
-  color: string;
-}
-
-const learningTracks: LearningTrack[] = [
-  {
-    id: '1',
-    name: 'Programming Fundamentals',
-    description: 'Master the basics of programming logic and thinking',
-    progress: 25,
-    totalCourses: 3,
-    completedCourses: 0,
-    icon: 'bulb',
-    color: colors.primary,
-  },
-  {
-    id: '2',
-    name: 'Web Development',
-    description: 'Build beautiful websites with HTML, CSS, and more',
-    progress: 0,
-    totalCourses: 3,
-    completedCourses: 0,
-    icon: 'globe',
-    color: colors.secondary,
-  },
-  {
-    id: '3',
-    name: 'Programming Languages',
-    description: 'Learn popular programming languages',
-    progress: 0,
-    totalCourses: 3,
-    completedCourses: 0,
-    icon: 'code-slash',
-    color: '#10b981',
-  },
-  {
-    id: '4',
-    name: 'Developer Tools',
-    description: 'Master essential development tools and workflows',
-    progress: 0,
-    totalCourses: 3,
-    completedCourses: 0,
-    icon: 'construct',
-    color: '#f59e0b',
-  },
-];
+import FunFactPopup, { funFacts, FunFact } from '../../components/FunFactPopup';
+import { learningTracks } from '../../data/courseContent';
 
 export default function HomeScreen() {
   const [currentStreak, setCurrentStreak] = useState(7);
   const [totalBadges, setTotalBadges] = useState(2);
+  const [totalXP, setTotalXP] = useState(275);
+  const [showFunFact, setShowFunFact] = useState(false);
+  const [currentFunFact, setCurrentFunFact] = useState<FunFact | null>(null);
+
+  // Show random fun fact on app load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const randomFact = funFacts[Math.floor(Math.random() * funFacts.length)];
+      setCurrentFunFact(randomFact);
+      setShowFunFact(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const renderWelcomeCard = () => (
     <LinearGradient
@@ -96,8 +59,8 @@ export default function HomeScreen() {
   const renderStatsCard = () => (
     <View style={[commonStyles.card, { marginBottom: spacing.md }]}>
       <Text style={[commonStyles.subheading, { marginBottom: spacing.md }]}>Your Stats</Text>
-      <View style={commonStyles.rowBetween}>
-        <View style={{ alignItems: 'center', flex: 1 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <View style={{ width: '50%', alignItems: 'center', marginBottom: spacing.md }}>
           <View style={{
             backgroundColor: colors.primary,
             borderRadius: borderRadius.full,
@@ -112,7 +75,7 @@ export default function HomeScreen() {
           <Text style={[commonStyles.subheading, { fontSize: 20, marginBottom: 0 }]}>{currentStreak}</Text>
           <Text style={commonStyles.caption}>Day Streak</Text>
         </View>
-        <View style={{ alignItems: 'center', flex: 1 }}>
+        <View style={{ width: '50%', alignItems: 'center', marginBottom: spacing.md }}>
           <View style={{
             backgroundColor: colors.secondary,
             borderRadius: borderRadius.full,
@@ -127,7 +90,22 @@ export default function HomeScreen() {
           <Text style={[commonStyles.subheading, { fontSize: 20, marginBottom: 0 }]}>{totalBadges}</Text>
           <Text style={commonStyles.caption}>Badges Earned</Text>
         </View>
-        <View style={{ alignItems: 'center', flex: 1 }}>
+        <View style={{ width: '50%', alignItems: 'center' }}>
+          <View style={{
+            backgroundColor: colors.warning,
+            borderRadius: borderRadius.full,
+            width: 48,
+            height: 48,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: spacing.sm,
+          }}>
+            <Icon name="star" size={24} color={colors.background} />
+          </View>
+          <Text style={[commonStyles.subheading, { fontSize: 20, marginBottom: 0 }]}>{totalXP}</Text>
+          <Text style={commonStyles.caption}>Total XP</Text>
+        </View>
+        <View style={{ width: '50%', alignItems: 'center' }}>
           <View style={{
             backgroundColor: colors.success,
             borderRadius: borderRadius.full,
@@ -146,11 +124,93 @@ export default function HomeScreen() {
     </View>
   );
 
-  const renderLearningTrack = (track: LearningTrack) => (
+  const renderQuickActions = () => (
+    <View style={[commonStyles.card, { marginBottom: spacing.md }]}>
+      <Text style={[commonStyles.subheading, { marginBottom: spacing.md }]}>Quick Actions</Text>
+      
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.primary,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            width: '48%',
+            marginRight: '2%',
+            marginBottom: spacing.sm,
+            alignItems: 'center',
+          }}
+          onPress={() => router.push('/(tabs)/learn')}
+        >
+          <Icon name="book" size={24} color={colors.background} />
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+            Continue Learning
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.success,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            width: '48%',
+            marginLeft: '2%',
+            marginBottom: spacing.sm,
+            alignItems: 'center',
+          }}
+          onPress={() => router.push('/(tabs)/practice')}
+        >
+          <Icon name="code-slash" size={24} color={colors.background} />
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+            Practice Coding
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.secondary,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            width: '48%',
+            marginRight: '2%',
+            alignItems: 'center',
+          }}
+          onPress={() => {
+            const randomFact = funFacts[Math.floor(Math.random() * funFacts.length)];
+            setCurrentFunFact(randomFact);
+            setShowFunFact(true);
+          }}
+        >
+          <Icon name="bulb" size={24} color={colors.background} />
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+            Fun Fact
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.warning,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            width: '48%',
+            marginLeft: '2%',
+            alignItems: 'center',
+          }}
+          onPress={() => router.push('/(tabs)/profile')}
+        >
+          <Icon name="person" size={24} color={colors.background} />
+          <Text style={[commonStyles.caption, { color: colors.background, marginTop: spacing.xs }]}>
+            View Profile
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderLearningTrack = (track: any) => (
     <TouchableOpacity
       key={track.id}
       style={[commonStyles.card, { marginBottom: spacing.md }]}
-      onPress={() => console.log('Navigate to track:', track.name)}
+      onPress={() => router.push('/(tabs)/learn')}
     >
       <View style={commonStyles.rowBetween}>
         <View style={{ flex: 1, marginRight: spacing.md }}>
@@ -198,6 +258,7 @@ export default function HomeScreen() {
         <View style={{ paddingTop: spacing.md }}>
           {renderWelcomeCard()}
           {renderStatsCard()}
+          {renderQuickActions()}
           
           <Text style={[commonStyles.heading, { marginBottom: spacing.md }]}>
             Learning Tracks
@@ -208,6 +269,12 @@ export default function HomeScreen() {
           <View style={{ height: spacing.xl }} />
         </View>
       </ScrollView>
+
+      <FunFactPopup
+        funFact={currentFunFact}
+        isVisible={showFunFact}
+        onClose={() => setShowFunFact(false)}
+      />
     </SafeAreaView>
   );
 }
