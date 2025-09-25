@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { commonStyles, colors, spacing, borderRadius } from '../../styles/commonStyles';

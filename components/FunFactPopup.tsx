@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { View, Text, Animated, TouchableOpacity, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { commonStyles, colors, spacing, borderRadius } from '../styles/commonStyles';
@@ -61,6 +61,33 @@ export default function FunFactPopup({ funFact, isVisible, onClose }: FunFactPop
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  const handleClose = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  }, [scaleAnim, opacityAnim, onClose]);
+
+  const getCategoryColor = useCallback((category: string) => {
+    switch (category) {
+      case 'programming': return colors.primary;
+      case 'history': return colors.secondary;
+      case 'technology': return colors.success;
+      case 'science': return colors.warning;
+      default: return colors.primary;
+    }
+  }, []);
+
   useEffect(() => {
     if (isVisible && funFact) {
       // Animate in
@@ -82,34 +109,7 @@ export default function FunFactPopup({ funFact, isVisible, onClose }: FunFactPop
       scaleAnim.setValue(0);
       opacityAnim.setValue(0);
     }
-  }, [isVisible, funFact]);
-
-  const handleClose = () => {
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onClose();
-    });
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'programming': return colors.primary;
-      case 'history': return colors.secondary;
-      case 'technology': return colors.success;
-      case 'science': return colors.warning;
-      default: return colors.primary;
-    }
-  };
+  }, [isVisible, funFact, opacityAnim, scaleAnim]);
 
   if (!isVisible || !funFact) {
     return null;

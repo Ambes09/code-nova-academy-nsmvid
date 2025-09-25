@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { View, Text, Animated, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { commonStyles, colors, spacing, borderRadius } from '../styles/commonStyles';
@@ -24,6 +24,28 @@ export default function AchievementPopup({ achievement, isVisible, onClose }: Ac
   const slideAnim = useRef(new Animated.Value(-200)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  const handleClose = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: -200,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.8,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  }, [slideAnim, scaleAnim, opacityAnim, onClose]);
 
   useEffect(() => {
     if (isVisible && achievement) {
@@ -60,29 +82,7 @@ export default function AchievementPopup({ achievement, isVisible, onClose }: Ac
       scaleAnim.setValue(0.8);
       opacityAnim.setValue(0);
     }
-  }, [isVisible, achievement]);
-
-  const handleClose = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: -200,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 0.8,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onClose();
-    });
-  };
+  }, [isVisible, achievement, handleClose, slideAnim, scaleAnim, opacityAnim]);
 
   if (!isVisible || !achievement) {
     return null;
