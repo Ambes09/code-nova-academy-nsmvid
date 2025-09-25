@@ -1,16 +1,29 @@
+
 import { Stack, useGlobalSearchParams } from 'expo-router';
-import { SafeAreaProvider, useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
 import { useEffect, useState } from 'react';
 import { setupErrorLogging } from '../utils/errorLogger';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_800ExtraBold } from '@expo-google-fonts/inter';
+import * as SplashScreen from 'expo-splash-screen';
 
 const STORAGE_KEY = 'emulated_device';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const actualInsets = useSafeAreaInsets();
   const { emulate } = useGlobalSearchParams<{ emulate?: string }>();
   const [storedEmulate, setStoredEmulate] = useState<string | null>(null);
+
+  // Load fonts
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_800ExtraBold,
+  });
 
   useEffect(() => {
     // Set up global error logging
@@ -31,6 +44,16 @@ export default function RootLayout() {
     }
   }, [emulate]);
 
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   let insetsToUse = actualInsets;
 
   if (Platform.OS === 'web') {
@@ -46,14 +69,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation: 'default',
-            }}
-          />
-        </GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'default',
+          }}
+        />
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   );
 }
